@@ -1,0 +1,239 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>LAST STOP — Precision Braking + City Spotting</title><style>
+:root{color-scheme:dark}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overstrength:hidden;background:#111820;color:#e7e8e8;font-family:Arial,Helvetica,sans-serif;touch-action:none;user-select:none}#game{position:fixed;inset:0}canvas{display:block}#hud{position:absolute;inset:0;pointer-events:none}#top{position:absolute;top:25px;left:32px;right:32px;display:flex;justify-content:space-between;align-items:start;text-shadow:0 2px 8px #1118}.brand{letter-spacing:.33em;font-size:14px;font-weight:700}.sub{color:#9da8b2;font-size:10px;letter-spacing:.2em;margin-top:9px}.score{text-align:right;font-size:30px;font-weight:200;letter-spacing:.1em}.score small{display:block;font-size:10px;letter-spacing:.22em;color:#b6bfc7;margin-bottom:4px}.centre{position:absolute;top:22%;left:0;right:0;text-align:center;font-size:12px;letter-spacing:.32em;color:#f1f2f1;opacity:0;transition:opacity .12s;text-shadow:0 2px 10px #111}.centre.show{opacity:1}.danger{color:#ee675c}.bottom{position:absolute;bottom:29px;left:0;right:0;text-align:center;font-size:11px;letter-spacing:.22em;color:#e6e8ea;opacity:.8}#overlay{position:fixed;inset:0;background:linear-gradient(90deg,#141b25eF,#19232dc9);z-index:4;display:flex;align-items:center;justify-content:center;padding:24px}#panel{width:min(490px,100%);border-left:2px solid #ec665b;padding:12px 0 14px 28px}h1{font-size:clamp(42px,8vw,75px);font-weight:500;letter-spacing:.12em;margin:0 0 13px}p{line-height:1.65;color:#b8c0c8;font-size:14px;max-width:420px}button{margin-top:22px;border:1px solid #e9e9e9;background:#e7e7e7;color:#1b2630;cursor:pointer;padding:15px 26px;letter-spacing:.25em;font-size:11px;font-weight:700}button:hover{background:white}.hint{margin-top:22px;font-size:10px;line-height:1.8;letter-spacing:.1em;color:#a7b0b9}.hidden{display:none!important}#soundBtn{pointer-events:auto;position:absolute;right:32px;bottom:27px;background:none;border:0;color:#aab3ba;letter-spacing:.1em;padding:4px;margin:0;font-size:11px;cursor:pointer}@media(max-width:640px){#top{top:19px;left:18px;right:18px}.score{font-size:23px}.brand{font-size:12px}.bottom{bottom:55px;font-size:10px}#soundBtn{right:18px;bottom:18px}#panel{padding-left:20px}}
+#paceHUD{position:absolute;right:32px;top:101px;text-align:right;font-size:11px;letter-spacing:.18em;color:#c3cbd2}#paceHUD strong{display:block;margin-top:7px;font-size:14px;color:#eceded;letter-spacing:.12em;font-weight:600}#paceHUD .bar{width:124px;height:3px;background:#69717a;margin-left:auto;margin-top:7px}#paceFill{background:#e65d54;height:100%;width:0;transition:width .12s}@media(max-width:640px){#paceHUD{top:82px;right:18px;font-size:9px}#paceHUD .bar{width:92px}}
+
+#lookHUD{position:absolute;left:50%;bottom:65px;transform:translateX(-50%);text-align:center;font-size:10px;letter-spacing:.13em;color:#e2e3e2;max-width:94vw;white-space:nowrap}
+#lookHUD .checks{display:flex;gap:18px;justify-content:center;margin-top:9px}#lookHUD .checks span{padding:7px 10px;border:1px solid #87909a;color:#aeb8c2;background:#18212be0}#lookHUD .checks span.checked{border-color:#e2e3e2;color:#fff}#lookHUD .checks span.looking{box-shadow:0 0 0 1px #e2e3e2}#lookPrompt{display:block;min-height:13px}
+.lookView{position:absolute;top:43%;width:170px;padding:13px 15px;background:#18212bee;border-top:2px solid #e2e3e2;opacity:0;transition:opacity .18s;line-height:1.6;font-size:10px;letter-spacing:.12em;transform:translateY(-50%)}.lookView.visible{opacity:1}.lookView strong{display:block;margin-top:5px;font-size:12px}.lookView.warning{border-color:#e65d54}.lookView.warning strong{color:#f28a80}#lookLeftView{left:20px}#lookRightView{right:20px}
+@media(max-width:640px){#lookHUD{bottom:88px;font-size:9px}.lookView{top:39%;width:130px;padding:10px;font-size:9px}#lookLeftView{left:12px}#lookRightView{right:12px}.lookView strong{font-size:10px}}
+
+#spotScore{position:absolute;left:32px;top:101px;font-size:10px;letter-spacing:.13em;color:#dce1e4;line-height:1.8}#spotScore strong{font-size:16px;font-weight:500}#spotTarget{position:absolute;width:124px;transform:translate(-50%,-50%);text-align:center;opacity:0;transition:opacity .1s;pointer-events:none}#spotTarget.visible{opacity:1}#spotFrame{height:95px;border:1px solid #e2e3e2;box-shadow:0 0 18px #ffffff16}#spotName{font-size:9px;letter-spacing:.13em;background:#18212be8;padding:7px 3px}#spotTimer{height:3px;background:#e2e3e2;transform-origin:left}#spotFeedback{position:absolute;top:30%;left:0;right:0;text-align:center;font-size:12px;letter-spacing:.16em;color:#e2e3e2;text-shadow:0 2px 8px #111;opacity:0}#spotFeedback.visible{opacity:1}#touchLook{display:none;position:absolute;bottom:110px;left:16px;right:16px;justify-content:space-between;pointer-events:none}#touchLook button{pointer-events:auto;margin:0;padding:12px;font-size:9px;letter-spacing:.1em;color:#e2e3e2;background:#18212bd9;border-color:#87909a;touch-action:none}
+@media(pointer:coarse){#touchLook{display:flex}}@media(max-width:640px){#spotScore{left:18px;top:82px;font-size:9px}#spotScore strong{font-size:13px}#spotTarget{width:92px}#spotFrame{height:82px}#spotName{font-size:8px}#spotFeedback{top:27%;font-size:10px}}
+
+#stopJudgement{position:absolute;left:0;right:0;top:36%;text-align:center;opacity:0;pointer-events:none;text-shadow:0 3px 18px #111b;z-index:2}#stopJudgement.show{animation:judgePop 1.65s both}#stopWord{font-size:clamp(34px,6vw,68px);font-weight:800;letter-spacing:.09em}#stopDetail{font-size:10px;letter-spacing:.18em;margin-top:7px;color:#e2e3e2}@keyframes judgePop{0%{opacity:0;transform:scale(.78) translateY(12px)}12%{opacity:1;transform:scale(1.07) translateY(0)}22%,75%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1) translateY(-12px)}}@media(prefers-reduced-motion:reduce){#stopJudgement.show{animation:judgeFade 1.65s both}@keyframes judgeFade{0%,75%{opacity:1}100%{opacity:0}}}
+
+#stopGroundLabel{position:absolute;display:none;writing-mode:vertical-rl;text-orientation:mixed;align-items:center;justify-content:flex-start;font-weight:800;font-family:Arial,Helvetica,sans-serif;line-height:1;letter-spacing:.01em;color:#28313c26;pointer-events:none;transform:translateX(-50%);overflow:hidden;mask-image:linear-gradient(to bottom,#000 0%,#000 32%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 32%,transparent 100%)}
+</style></head><body><div id="game"></div><div id="hud"><div id="top"><div><div class="brand">LAST STOP</div><div class="sub">A CITY IN MOTION</div></div><div class="score"><small>DISTANCE</small><span id="points">00000</span></div></div><div id="stopGroundLabel" aria-hidden="true">STOP</div><div id="paceHUD">PACE<br><strong id="paceLabel">READY</strong><div class="bar"><div id="paceFill"></div></div></div><div class="centre" id="message"></div><div id="stopJudgement" role="status" aria-live="polite"><div id="stopWord"></div><div id="stopDetail"></div></div><div class="bottom" id="instructions">HOLD TO STOP · RELEASE TO MOVE</div><div id="lookHUD"><span id="lookPrompt">MOVE CURSOR LEFT / RIGHT TO LOOK</span><div class="checks"><span id="leftCheck">← LEFT</span><span id="rightCheck">RIGHT →</span></div></div><div class="lookView" id="lookLeftView">← LEFT APPROACH<strong id="leftApproach">LOOK LEFT</strong></div><div class="lookView" id="lookRightView">RIGHT APPROACH →<strong id="rightApproach">LOOK RIGHT</strong></div><div id="spotScore">SPOTTED <strong id="spotCount">0</strong><br><span id="spotChain">CHAIN ×0 · 0 PTS</span></div><div id="spotTarget"><div id="spotFrame"></div><div id="spotTimer"></div><div id="spotName"></div></div><div id="spotFeedback"></div><div id="touchLook"><button id="touchLookLeft" aria-label="Look left while walking">← LOOK</button><button id="touchLookRight" aria-label="Look right while walking">LOOK →</button></div><button id="soundBtn">SOUND ON</button></div><div id="overlay"><div id="panel"><h1 id="headline">LAST STOP</h1><p id="description">The city doesn't stop for you. Hold to stop walking. Release to move. At tram crossings, stop behind the line, check the signal and both directions, then cross safely. Move your cursor left and right to look along the tracks. On touch screens, hold to brake and slide your finger to look. While walking, spot lit windows, rooftop birds and street posters: glance towards the outlined detail before it fades to build a spotting chain. On mobile, use the LOOK buttons to look while walking. Aim for the white STOP band before each crossing. The surrounding bands fade to grey as landing quality drops. Stops are graded PERFECT, GREAT, GOOD, OKAY or MISS by position. Braking is heavier: anticipate the longer slide. PERFECT and GREAT stops launch quickly; OKAY and MISS stops take much longer to rebuild momentum. Crossings arrive more often. Spotting pauses near crossings; always wait for the signal.</p><button id="start">BEGIN RUN →</button><div class="hint">SPACE / MOUSE / TOUCH TO STOP<br>CURSOR / ← → TO LOOK · TOUCH: HOLD + SLIDE<br>SOUND OPTIONAL</div></div></div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js';
+const game=document.querySelector('#game'),overlay=document.querySelector('#overlay'),startButton=document.querySelector('#start'),headline=document.querySelector('#headline'),description=document.querySelector('#description'),pts=document.querySelector('#points'),msg=document.querySelector('#message'),soundBtn=document.querySelector('#soundBtn'),paceLabel=document.querySelector('#paceLabel'),paceFill=document.querySelector('#paceFill');
+const scene=new THREE.Scene();scene.background=new THREE.Color('#cbd0d4');const camera=new THREE.OrthographicCamera(-9,9,5,-5,.1,200);camera.position.set(0,0,40);camera.lookAt(0,0,0);const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;game.appendChild(renderer.domElement);
+const C={sky:0xcbd0d4,far:0xa9b1bc,mid:0x778292,near:0x46515f,ground:0x242c37,ink:0x1b222c,side:0x394450,pale:0xe2e3e2,red:0xe65d54,white:0xdce1e4};function mat(c){return new THREE.MeshBasicMaterial({color:c,side:THREE.DoubleSide})}const mats={};Object.entries(C).forEach(([k,v])=>mats[k]=mat(v));function rect(w,h,m,x,y,z=0,parent=scene){const o=new THREE.Mesh(new THREE.PlaneGeometry(w,h),typeof m==='string'?mats[m]:m);o.position.set(x,y,z);parent.add(o);return o}function line(x1,y1,x2,y2,width,m,z=0,parent=scene){const dx=x2-x1,dy=y2-y1,o=rect(Math.hypot(dx,dy),width,m,(x1+x2)/2,(y1+y2)/2,z,parent);o.rotation.z=Math.atan2(dy,dx);return o}function box(g,w,h,m,x,y,z=0){return rect(w,h,m,x,y,z,g)}let W=18,H=10;function resize(){const a=innerWidth/innerHeight;H=10;W=H*a;camera.left=-W/2;camera.right=W/2;camera.top=H/2;camera.bottom=-H/2;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)}window.addEventListener('resize',resize);resize();
+// Repeating scenery cells in parallax layers.
+const layers=[];let seed=12345;function rand(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}function skyline(z,base,tint,width,minH,maxH,rate){const group=new THREE.Group();group.position.z=z;scene.add(group);const units=[];for(let i=0;i<35;i++){let x=i*width-width*2;const h=minH+rand()*(maxH-minH);let b=box(group,width*(.64+rand()*.4),h,tint,x,base+h/2,0);units.push(b);if(rand()>.65)box(group,.055,h*.25,tint,x+width*.2,base+h+.2,0)}layers.push({group,speed:rate,span:width*35})}skyline(-30,-1.05,'far',2.0,1.4,4.8,.12);skyline(-19,-1.08,'mid',2.5,1.3,3.6,.22);skyline(-10,-1.1,'near',2.7,.7,2.7,.43);
+const world=new THREE.Group();scene.add(world);box(world,10000,2.6,'ground',0,-3.75,2);box(world,10000,.09,'side',0,-2.42,3);box(world,10000,.05,'near',0,-2.55,4);
+// city furniture pools
+for(let i=0;i<90;i++){const x=i*8+1;line(x,-2.4,x, -.55,.09,'near',4,world);box(world,.65,.1,'near',x,-.58,4);box(world,.52,.1,'pale',x,-.69,4);if(i%3===0){line(x+3,-2.35,x+3,-1.35,.07,'near',4,world);box(world,.85,.10,'near',x+3,-1.37,4)}}
+// running human simple silhouette composed of limbs updated every frame
+const player=new THREE.Group();player.position.set(-W*.27,-2.4,12);scene.add(player);let head=new THREE.Mesh(new THREE.CircleGeometry(.19,20),mats.ink);head.position.set(0,.98,0);player.add(head);box(player,.28,.6,'ink',-.015,.51,0);const limbs=[];function limb(x,y,len,width){const pivot=new THREE.Group();pivot.position.set(x,y,.05);player.add(pivot);box(pivot,width,len,'ink',0,-len/2,.03);limbs.push(pivot);return pivot}let arm1=limb(-.12,.77,.48,.10),arm2=limb(.12,.77,.48,.10),leg1=limb(-.09,.25,.56,.13),leg2=limb(.09,.25,.56,.13);let foot1=box(leg1,.23,.09,'ink',.045,-.57,.1),foot2=box(leg2,.23,.09,'ink',.045,-.57,.1);
+// Crossing elements and traveling tram using local world units.
+let crossingGroup=new THREE.Group();world.add(crossingGroup);const crossingAt=18,period=20,trackWidth=4.7;const crossings=[];function createCrossing(x,index){const g=new THREE.Group();g.position.x=x;world.add(g);crossings.push({x,index,g,signal:null});box(g,trackWidth,.15,'mid',trackWidth/2,-2.42,5);for(let v=.3;v<trackWidth;v+=.58)box(g,.28,.14,'pale',v,-2.39,6);box(g,.09,.8,'white',-.45,-2,6);box(g,.09,.8,'white',trackWidth+.36,-2,6);line(-.72,-2.38,-.72,.3,.10,'ink',7,g);box(g,.32,.56,'ink',-.72,.42,8);const red=box(g,.16,.16,'red',-.72,.50,9);const white=box(g,.16,.16,'white',-.72,.28,9);crossings[index].red=red;crossings[index].white=white;line(0,-1.45,trackWidth,-1.45,.035,'near',6,g);return g}for(let i=0;i<45;i++)createCrossing(crossingAt+i*period,i);
+// Translucent six-sided signal pulses sit behind the signal housing.
+const signalPulseMaterials={};
+for(const state of ['red','white'])signalPulseMaterials[state]=[.13,.22].map(opacity=>new THREE.MeshBasicMaterial({color:C[state],transparent:true,opacity,depthWrite:false,side:THREE.DoubleSide}));
+const signalPulseGeometry=new THREE.CircleGeometry(.78,6);
+for(const c of crossings){
+ const halo=new THREE.Group();halo.position.set(-.72,.50,7.8);c.g.add(halo);
+ c.signalHalo=halo;c.signalPulses=[];
+ for(let i=0;i<2;i++){const pulse=new THREE.Mesh(signalPulseGeometry,signalPulseMaterials.red[i]);pulse.rotation.z=Math.PI/12;halo.add(pulse);c.signalPulses.push(pulse);}
+}
+function updateSignalHalos(time){
+ const phase=(time*.9)%1;
+ for(const state of ['red','white'])for(let i=0;i<2;i++){
+  const p=(phase+i*.5)%1;
+  signalPulseMaterials[state][i].opacity=(1-p)*(i===0?.16:.25);
+ }
+ for(const c of crossings){
+  const clear=tramInfo(c,time).clear,state=clear?'white':'red';
+  c.red.visible=!clear;c.white.visible=clear;
+  c.signalHalo.position.y=clear?.28:.50;
+  for(let i=0;i<2;i++){
+   const p=(phase+i*.5)%1,pulse=c.signalPulses[i];
+   pulse.material=signalPulseMaterials[state][i];pulse.scale.setScalar(.5+p*.75);
+  }
+ }
+}
+// Narrow precision target: 0.55 world units, entirely behind the crossing line.
+const PERFECT_MIN=.90,PERFECT_MAX=1.45,PERFECT_WIDTH=PERFECT_MAX-PERFECT_MIN;
+// Landing bands follow the grade boundaries and fade down into the foreground.
+const landingBands=[
+ {min:.45,max:.625,color:0x9ca6af,grade:'GOOD'},
+ {min:.625,max:PERFECT_MIN,color:0xd0d5d8,grade:'GREAT'},
+ {min:PERFECT_MIN,max:PERFECT_MAX,color:0xffffff,grade:'PERFECT'},
+ {min:PERFECT_MAX,max:1.725,color:0xd0d5d8,grade:'GREAT'},
+ {min:1.725,max:2.025,color:0x9ca6af,grade:'GOOD'},
+ {min:2.025,max:2.425,color:0x68717b,grade:'OKAY'}
+];
+const LANDING_HEIGHT=1.7,LANDING_TOP=-2.42;
+for(const band of landingBands){
+ const material=new THREE.ShaderMaterial({
+  uniforms:{tint:{value:new THREE.Color(band.color)}},transparent:true,depthWrite:false,side:THREE.DoubleSide,
+  vertexShader:`varying vec2 landingUV;
+   void main(){landingUV=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+  fragmentShader:`uniform vec3 tint;varying vec2 landingUV;
+   void main(){float fade=smoothstep(0.0,0.92,landingUV.y);
+   gl_FragColor=vec4(tint,fade*0.97);
+   #include <colorspace_fragment>
+   }`
+ });
+ for(const c of crossings)box(c.g,band.max-band.min,LANDING_HEIGHT,material,-(band.min+band.max)/2,LANDING_TOP-LANDING_HEIGHT/2,6.4);
+}
+const groundLabel=document.querySelector('#stopGroundLabel');
+function positionGroundLabel(){
+ const c=upcoming(),pixels=innerHeight/H;
+ const x=world.position.x+c.x-(PERFECT_MIN+PERFECT_MAX)/2;
+ const screenX=((x-camera.position.x)/W+.5)*innerWidth;
+ groundLabel.style.display=active&&screenX>-60&&screenX<innerWidth+60?'flex':'none';
+ groundLabel.style.left=screenX+'px';groundLabel.style.top=(.5-LANDING_TOP/H)*innerHeight+'px';
+ groundLabel.style.width=(PERFECT_WIDTH*pixels)+'px';groundLabel.style.height=(LANDING_HEIGHT*pixels)+'px';
+ groundLabel.style.fontSize=(.37*pixels)+'px';groundLabel.style.paddingTop=(.08*pixels)+'px';
+}
+
+const tram=new THREE.Group();scene.add(tram);box(tram,5.3,1.45,'ink',0,-1.55,0);box(tram,5.04,1.17,'near',0,-1.55,.1);box(tram,4.7,.09,'white',0,-.94,.3);for(let i=0;i<5;i++){box(tram,.74,.62,'mid',-1.9+i*.92,-1.43,.3);line(-2.27+i*.92,-1.75,-2.27+i*.92,-1.12,.04,'ink',.4,tram)}box(tram,.13,.14,'pale',-2.56,-1.75,.5);box(tram,.13,.14,'red',2.56,-1.75,.5);line(0,-.83,.23,-.4,.04,'ink',0,tram);tram.position.z=9;
+const sfx={on:true,ctx:null};function tone(freq,dur=0.15,type='sine',vol=.06){if(!sfx.on)return;try{sfx.ctx??=new(window.AudioContext||window.webkitAudioContext)();sfx.ctx.resume();const t=sfx.ctx.currentTime,osc=sfx.ctx.createOscillator(),gain=sfx.ctx.createGain();osc.type=type;osc.frequency.setValueAtTime(freq,t);gain.gain.setValueAtTime(vol,t);gain.gain.exponentialRampToValueAtTime(.001,t+dur);osc.connect(gain).connect(sfx.ctx.destination);osc.start(t);osc.stop(t+dur)}catch(e){}}function bell(){tone(850,.22,'triangle',.035);setTimeout(()=>tone(1040,.26,'triangle',.03),190)}soundBtn.onclick=()=>{sfx.on=!sfx.on;soundBtn.textContent=sfx.on?'SOUND ON':'SOUND OFF'};
+let active=false,held=false,distance=0,last=performance.now(),runClock=0,attempt=0,safeCrossings=0,feedbackUntil=0,currentTram=0,tramX=0,tramActive=false,tramSpeed=7.5,phase=-1,nearWarning=false,failed=false,passedSet=new Set();let cameraOffset=0,velocity=0,stride=0;const RUN_SPEED=3.75,BRAKE_TIME=1.50,EARLY_ACCEL_TIME=3.20,PERFECT_ACCEL_TIME=.12,CRUISE_ACCEL_TIME=.85;
+let stopGrade=null,gradedCrossing=-1,wasStopped=false,stopCount=0;const PLAYER_SCREEN_X=-W*.27;function upcoming(){const idx=Math.max(0,Math.floor((distance-crossingAt-trackWidth-.65)/period)+1);return crossings[Math.min(idx,crossings.length-1)]}function crossingTime(c){return (c.index*11+3.2)}function tramInfo(c,t){const cycle=(t-crossingTime(c))%13;const p=(cycle+13)%13;return {approach:p<5.8,progress:p,clear:p>=6.4 && p<=12.85}}function reset(){attempt++;distance=0;runClock=0;safeCrossings=0;passedSet=new Set();held=false;velocity=0;stride=0;active=true;failed=false;nearWarning=false;feedbackUntil=0;stopGrade=null;gradedCrossing=-1;wasStopped=false;stopCount=0;hideJudgement();player.rotation.z=0;paceLabel.textContent='READY';paceFill.style.width='0%';resetLooking();resetSpotting();overlay.classList.add('hidden');tone(550,.14);tone(720,.2);}
+function end(reason){active=false;failed=true;held=false;headline.textContent='RUN ENDED';description.innerHTML=`${reason}<br><br><strong>${Math.floor(distance*10)} m</strong> travelled · ${safeCrossings} safe crossings<br>${spottedCount} details spotted · ${spotPoints} spotting points`;startButton.textContent='TRY AGAIN →';overlay.classList.remove('hidden');resetLooking();hideSpotting();hideJudgement();tone(180,.35,'sawtooth',.04)}startButton.addEventListener('click',reset);function setHeld(v){if(active)held=v}window.addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='ArrowDown'){e.preventDefault();setHeld(true)}if(e.code==='Enter'&&!active)reset()});window.addEventListener('keyup',e=>{if(e.code==='Space'||e.code==='ArrowDown'){e.preventDefault();setHeld(false)}});window.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;setHeld(true)});window.addEventListener('pointerup',()=>setHeld(false));window.addEventListener('pointercancel',()=>setHeld(false));window.addEventListener('blur',()=>setHeld(true));
+
+// Looking is observation feedback; the crossing signal remains authoritative.
+const lookUI={prompt:document.querySelector('#lookPrompt'),left:document.querySelector('#leftCheck'),right:document.querySelector('#rightCheck'),leftView:document.querySelector('#lookLeftView'),rightView:document.querySelector('#lookRightView'),leftApproach:document.querySelector('#leftApproach'),rightApproach:document.querySelector('#rightApproach')};
+let lookTarget=0,lookOffset=0,lookCrossing=-1,leftDwell=0,rightDwell=0,leftChecked=false,rightChecked=false;
+function resetLooking(){lookTarget=0;lookOffset=0;lookCrossing=-1;leftDwell=rightDwell=0;leftChecked=rightChecked=false;camera.position.x=0;lookUI.leftView.classList.remove('visible');lookUI.rightView.classList.remove('visible');lookUI.left.classList.remove('checked','looking');lookUI.right.classList.remove('checked','looking');lookUI.prompt.textContent='MOVE CURSOR LEFT / RIGHT TO LOOK';}
+function aimLook(e){if(!active||e.target.closest('button'))return;lookTarget=Math.max(-1,Math.min(1,(e.clientX/innerWidth-.5)*2));}
+window.addEventListener('pointermove',aimLook);window.addEventListener('pointerdown',aimLook);
+window.addEventListener('pointerup',e=>{if(e.pointerType!=='mouse')lookTarget=0});window.addEventListener('pointercancel',()=>lookTarget=0);
+window.addEventListener('keydown',e=>{if(active&&(e.code==='ArrowLeft'||e.code==='ArrowRight')){e.preventDefault();lookTarget=e.code==='ArrowLeft'?-1:1;}});
+window.addEventListener('keyup',e=>{if(e.code==='ArrowLeft'||e.code==='ArrowRight'){e.preventDefault();lookTarget=0;}});
+window.addEventListener('blur',()=>lookTarget=0);
+function updateLooking(dt,c,distTo,info){
+  const inRange=active&&distTo>0&&distTo<8;
+  if(lookCrossing!==c.index){lookCrossing=c.index;leftDwell=rightDwell=0;leftChecked=rightChecked=false;}
+  const lookingLeft=inRange&&lookTarget<-.55,lookingRight=inRange&&lookTarget>.55;
+  // Brief dwell prevents a flick across the screen from checking both sides.
+  leftDwell=lookingLeft?leftDwell+dt:0;rightDwell=lookingRight?rightDwell+dt:0;
+  if(leftDwell>=.28)leftChecked=true;if(rightDwell>=.28)rightChecked=true;
+  for(const [node,checked,looking,label] of [[lookUI.left,leftChecked,lookingLeft,'← LEFT'],[lookUI.right,rightChecked,lookingRight,'RIGHT →']]){node.classList.toggle('checked',checked);node.classList.toggle('looking',looking);node.textContent=label+(checked?' ✓':'');}
+  lookUI.leftView.classList.toggle('visible',lookingLeft);lookUI.rightView.classList.toggle('visible',lookingRight);
+  const tramCentre=c.x+trackWidth+5.7-info.progress*3.1;
+  const visibleTram=info.progress<6.4;
+  const onRight=tramCentre>=c.x+trackWidth/2;
+  lookUI.leftApproach.textContent=visibleTram&&!onRight?'TRAM PASSING ←':'NO TRAM IN VIEW';
+  lookUI.rightApproach.textContent=visibleTram&&onRight?'← TRAM APPROACHING':'NO TRAM IN VIEW';
+  lookUI.leftView.classList.toggle('warning',visibleTram&&!onRight);lookUI.rightView.classList.toggle('warning',visibleTram&&onRight);
+  lookUI.prompt.textContent=!inRange?(distTo<=0?'CROSSING · KEEP OBSERVING':'SPOT CITY DETAILS · LOOK LEFT / RIGHT'):
+    leftChecked&&rightChecked?(info.clear?'BOTH CHECKED · SIGNAL CLEAR':'BOTH CHECKED · WAIT FOR SIGNAL'):
+    'LOOK BOTH WAYS · '+(info.clear?'SIGNAL CLEAR':'WAIT FOR SIGNAL');
+  // Damped, restrained camera movement keeps the runner and stopping zone readable.
+  lookOffset+=(lookTarget*Math.min(.65,W*.06)-lookOffset)*(1-Math.exp(-dt*8));
+  camera.position.x=lookOffset;
+}
+
+
+// Fleeting city details appear between crossings. Spotting has its own score.
+const spotUI={target:document.querySelector('#spotTarget'),name:document.querySelector('#spotName'),timer:document.querySelector('#spotTimer'),count:document.querySelector('#spotCount'),chain:document.querySelector('#spotChain'),feedback:document.querySelector('#spotFeedback')};
+const spotArt=[];
+function spotGroup(){const g=new THREE.Group();g.position.z=8;g.visible=false;scene.add(g);spotArt.push(g);return g;}
+const windowDetail=spotGroup();box(windowDetail,1.02,1.25,'ink',0,0);box(windowDetail,.72,.9,'pale',0,0,.1);box(windowDetail,.06,1,'near',0,0,.2);box(windowDetail,.8,.06,'near',0,0,.2);
+const birdDetail=spotGroup();line(-.65,-.24,.65,-.24,.06,'near',0,birdDetail);box(birdDetail,.28,.23,'ink',0,0,.1);box(birdDetail,.16,.18,'ink',.15,.16,.1);line(-.12,.04,-.36,.2,.08,'ink',.1,birdDetail);line(.23,.16,.35,.12,.055,'ink',.2,birdDetail);line(-.05,-.08,-.06,-.23,.035,'ink',.1,birdDetail);
+const posterDetail=spotGroup();box(posterDetail,.85,1.1,'ink',0,0);box(posterDetail,.73,.98,'pale',0,0,.1);line(-.2,-.16,.2,.25,.1,'near',.2,posterDetail);line(-.2,.25,.2,-.16,.1,'near',.2,posterDetail);box(posterDetail,.48,.06,'near',0,-.34,.2);
+let spottedCount=0,spotPoints=0,spotStreak=0,spotSequence=0,spotCooldown=.8,spotActive=null,spotFeedbackTime=0;
+const spotNames=['LIT WINDOW','ROOFTOP BIRD','STREET POSTER'];
+function hideSpotting(){for(const g of spotArt)g.visible=false;spotUI.target.classList.remove('visible');spotUI.feedback.classList.remove('visible');}
+function resetSpotting(){hideSpotting();spottedCount=spotPoints=spotStreak=spotSequence=0;spotCooldown=.8;spotActive=null;spotFeedbackTime=0;spotUI.count.textContent='0';spotUI.chain.textContent='CHAIN ×0 · 0 PTS';}
+function spotNotice(text){spotUI.feedback.textContent=text;spotFeedbackTime=.8;spotUI.feedback.classList.add('visible');}
+function updateSpotting(dt,distTo){
+  // Pause both the target and its timer for safe stopping and track observation.
+  const allowed=active&&distTo>9&&velocity>.15;
+  if(!allowed){hideSpotting();return;}
+  if(spotFeedbackTime>0){spotFeedbackTime-=dt;spotUI.feedback.classList.toggle('visible',spotFeedbackTime>0);}
+  if(!spotActive){spotCooldown-=dt;if(spotCooldown>0)return;
+    const index=spotSequence%spotArt.length,side=spotSequence%2===0?-1:1;
+    const duration=Math.max(1.1,1.7-spottedCount*.035);
+    spotActive={index,side,left:duration,duration,dwell:0,x:side*W*.36,y:index===1?1.05:.4};spotSequence++;
+    spotUI.name.textContent=spotNames[index]+' · LOOK '+(side<0?'←':'→');
+  }
+  const a=spotActive;a.left-=dt;a.x-=velocity*.12*dt;
+  const g=spotArt[a.index];g.visible=true;g.position.x=a.x;g.position.y=a.y;
+  const screenX=(a.x-camera.position.x)/W+.5;
+  spotUI.target.style.left=(screenX*100)+'%';spotUI.target.style.top=((.5-a.y/H)*100)+'%';
+  spotUI.target.classList.add('visible');spotUI.timer.style.transform='scaleX('+Math.max(0,a.left/a.duration)+')';
+  a.dwell=(a.side<0?lookTarget<-.55:lookTarget>.55)?a.dwell+dt:0;
+  if(a.dwell>=.18){spottedCount++;spotStreak++;const reward=100+25*Math.min(spotStreak-1,8);spotPoints+=reward;spotUI.count.textContent=String(spottedCount);spotNotice('SPOTTED +'+reward+' · CHAIN ×'+spotStreak);tone(760+Math.min(spotStreak,8)*60,.1,'triangle',.035);spotActive=null;spotCooldown=.48;g.visible=false;spotUI.target.classList.remove('visible');}
+  else if(a.left<=0){spotStreak=0;spotNotice('MISSED · KEEP LOOKING');spotActive=null;spotCooldown=.3;g.visible=false;spotUI.target.classList.remove('visible');}
+  spotUI.chain.textContent='CHAIN ×'+spotStreak+' · '+spotPoints+' PTS';
+}
+for(const [id,direction] of [['#touchLookLeft',-1],['#touchLookRight',1]]){
+ const button=document.querySelector(id);
+ button.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();if(active){lookTarget=direction;button.setPointerCapture(e.pointerId);}});
+ for(const type of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(type,e=>{e.stopPropagation();lookTarget=0;});
+}
+
+
+// Position grades preserve the original 0.55-unit PERFECT zone.
+const STOP_GRADES={
+ PERFECT:{radius:.275,accel:PERFECT_ACCEL_TIME,strength:100,freq:1040,color:'#f5f2d6',detail:'INSTANT RESTART'},
+ GREAT:{radius:.55,accel:.28,strength:90,freq:880,color:'#e2e3e2',detail:'QUICK RESTART'},
+ GOOD:{radius:.85,accel:.65,strength:65,freq:700,color:'#c7d2dc',detail:'SMOOTH RESTART'},
+ OKAY:{radius:1.25,accel:1.65,strength:25,freq:520,color:'#aeb9c4',detail:'SLOW RESTART'},
+ MISS:{radius:Infinity,accel:EARLY_ACCEL_TIME,strength:0,freq:330,color:'#e79a8e',detail:'MOMENTUM BROKEN'}
+};
+const STOP_CENTRE=(PERFECT_MIN+PERFECT_MAX)/2,STOP_LINE_DISTANCE=.45;
+const judgementUI={panel:document.querySelector('#stopJudgement'),word:document.querySelector('#stopWord'),detail:document.querySelector('#stopDetail')};
+function hideJudgement(){judgementUI.panel.classList.remove('show');}
+function gradeStop(distanceToCrossing){
+ // A stop beyond the marked white stop line never earns a precision reward.
+ if(distanceToCrossing<STOP_LINE_DISTANCE-1e-9)return 'MISS';
+ const error=Math.abs(distanceToCrossing-STOP_CENTRE);
+ for(const grade of ['PERFECT','GREAT','GOOD','OKAY'])if(error<=STOP_GRADES[grade].radius+1e-9)return grade;
+ return 'MISS';
+}
+function showStopJudgement(grade,distanceToCrossing){
+ const data=STOP_GRADES[grade];judgementUI.word.textContent=grade+'!';judgementUI.word.style.color=data.color;
+ const position=grade==='PERFECT'?'ON TARGET':distanceToCrossing<STOP_LINE_DISTANCE?'PAST STOP LINE':distanceToCrossing>STOP_CENTRE?'EARLY':'LATE';
+ judgementUI.detail.textContent=position+' · '+data.detail;
+ hideJudgement();void judgementUI.panel.offsetWidth;judgementUI.panel.classList.add('show');
+ tone(data.freq,.16,'triangle',grade==='PERFECT'?.065:.035);
+ if(grade==='PERFECT')setTimeout(()=>tone(1320,.18,'triangle',.045),110);
+}
+
+function animate(now){requestAnimationFrame(animate);const dt=Math.min(.035,(now-last)/1000);last=now;if(active){// The only change to player movement: long linear braking and grade-dependent restart.
+const preNext=upcoming(),preDist=preNext.x-distance,preInfo=tramInfo(preNext,runClock);
+const safeToAccelerate=preInfo.clear||preDist>8||preDist<0;
+const restartTime=stopGrade?(safeToAccelerate?STOP_GRADES[stopGrade].accel:EARLY_ACCEL_TIME):CRUISE_ACCEL_TIME;
+const target=held?0:RUN_SPEED;
+const step=(held?RUN_SPEED/BRAKE_TIME:RUN_SPEED/restartTime)*dt;
+const previousVelocity=velocity;
+velocity+=Math.sign(target-velocity)*Math.min(Math.abs(target-velocity),step);
+// Lean into a launch and brace backwards through the longer braking slide.
+const acceleration=(velocity-previousVelocity)/Math.max(dt,.001);
+const lean=held&&velocity>.03?.12:-Math.min(.15,Math.max(0,acceleration)*.006);
+player.rotation.z+=(lean-player.rotation.z)*(1-Math.exp(-dt*12));
+if(!stopGrade){paceLabel.textContent=held?'BRAKING':'PACE '+Math.round(100*velocity/RUN_SPEED)+'%';paceFill.style.width=Math.round(100*velocity/RUN_SPEED)+'%';}
+const speed=velocity;runClock+=dt;const prev=distance;distance+=speed*dt;
+pts.textContent=String(Math.floor(distance*10)).padStart(5,'0');runClock=Math.max(0,runClock);
+for(const completed of crossings){if(prev<=completed.x+trackWidth+.65&&distance>completed.x+trackWidth+.65&&!passedSet.has(completed.index)){passedSet.add(completed.index);safeCrossings++;stopGrade=null;gradedCrossing=-1;paceLabel.textContent='READY';paceFill.style.width='0%';tone(650,.13);setTimeout(()=>tone(870,.17),120);feedbackUntil=now+1000;}}
+const next=upcoming();const distTo=next.x-distance;const info=tramInfo(next,runClock);
+updateLooking(dt,next,distTo,info);
+updateSpotting(dt,distTo);
+const stopped=held&&velocity<.012;
+if(stopped&&!wasStopped&&distTo>0&&distTo<8&&gradedCrossing!==next.index){
+  // Precision is awarded only for a complete stop, and only before entering tracks.
+  stopGrade=gradeStop(distTo);
+  gradedCrossing=next.index;stopCount++;
+  const gradeData=STOP_GRADES[stopGrade];
+  paceLabel.textContent=stopGrade+' · '+gradeData.detail;
+  paceFill.style.width=gradeData.strength+'%';
+  showStopJudgement(stopGrade,distTo);
+}
+wasStopped=stopped;
+if(!held&&stopGrade){paceLabel.textContent=safeToAccelerate?stopGrade+' RESTART':'BUILDING SPEED';paceFill.style.width=(Math.round(100*velocity/RUN_SPEED))+'%';}
+if(distTo<0&&gradedCrossing!==next.index){stopGrade=null;}
+const zone=distTo<8&&distTo>-7;msg.classList.toggle('show',zone||now<feedbackUntil);
+if(zone){if(distTo>0.05){msg.textContent=info.clear?'LOOK BOTH WAYS · CROSS WHEN CLEAR':'STOP · LOOK · LISTEN';msg.classList.toggle('danger',!info.clear)}else{msg.textContent='KEEP MOVING';msg.classList.remove('danger')}}else if(now>=feedbackUntil)msg.textContent='';
+// Crossing violation: entering rail zone while approaching tram; signal also requires waiting.
+if(prev<next.x+.05&&distance>=next.x+.05&&!info.clear){end('You crossed before the tram crossing was clear. Stop behind the line, look both ways, and wait for the signal.')}// crossing layout: show tram on closest crossing. Tram travels from right to left while the signal is red.
+const c=next;const p=info.progress;tramActive=p<6.4;tram.visible=tramActive;tramX=c.x+trackWidth+5.7-p*3.1;tram.position.x=tramX-distance+PLAYER_SCREEN_X;tram.position.y=0;updateSignalHalos(runClock);if(distTo<6&&distTo>0&&!info.clear&&!nearWarning){bell();nearWarning=true}if(distTo>9)nearWarning=false;
+} else {msg.classList.remove('show');tram.visible=false}
+// world offset and background parallax
+world.position.x=PLAYER_SCREEN_X-distance;positionGroundLabel();for(const l of layers){const shift=(distance*l.speed)%l.span;l.group.position.x=-shift-W*.7}player.position.x=PLAYER_SCREEN_X;const moving=velocity>.03;stride+=dt*13*(velocity/RUN_SPEED);const pace=stride;leg1.rotation.z=moving?Math.sin(pace)*.58:0;leg2.rotation.z=moving?-Math.sin(pace)*.58:0;arm1.rotation.z=moving?-Math.sin(pace)*.45:-.08;arm2.rotation.z=moving?Math.sin(pace)*.45:.08;player.position.y=-2.4+(moving?Math.abs(Math.sin(pace))*.045:0);renderer.render(scene,camera)}requestAnimationFrame(animate);
+</script></body></html>
